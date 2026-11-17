@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мои расходы</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .card { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h1>💸 Мои расходы</h1>
+  <p>Данные из Telegram-бота. Период: последние 7 дней.</p>
+
+  <div class="card">
+    <canvas id="chart" height="100"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Последние траты</h3>
+    <table>
+      <thead><tr><th>Дата</th><th>Описание</th><th>Сумма</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+<script>
+async function load() {
+  const [stats, expenses] = await Promise.all([
+    fetch('/api/stats?days=7').then(r => r.json()),
+    fetch('/api/expenses?days=7').then(r => r.json()),
+  ]);
+
+  new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+      labels: stats.map(s => s.day),
+      datasets: [{
+        label: 'Сумма за день',
+        data: stats.map(s => s.total),
+        backgroundColor: '#4f8cff',
+        borderRadius: 6,
+      }]
+    },
+    options: { plugins: { legend: { display: false } } }
+  });
+
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = expenses.map(e => `
+    <tr>
+      <td>${new Date(e.created_at).toLocaleString('ru-RU')}</td>
+      <td>${e.description}</td>
+      <td>${e.amount.toFixed(2)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="3">Пока пусто</td></tr>';
+}
+load();
+</script>
+</body>
+</html>
