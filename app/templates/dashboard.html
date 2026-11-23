@@ -57,6 +57,18 @@ async function load() {
       <td>${e.amount.toFixed(2)}</td>
     </tr>
   `).join('') || '<tr><td colspan="3">Пока пусто</td></tr>';
+
+  const cats = await fetch('/api/categories?days=7').then(r => r.json());
+  new Chart(document.getElementById('pieChart'), {
+    type: 'pie',
+    data: {
+      labels: cats.map(c => c.category),
+      datasets: [{
+        data: cats.map(c => c.total),
+        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0']
+      }]
+    }
+  });
 }
 load();
 </script>

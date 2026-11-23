@@ -59,6 +59,24 @@ def stats(days: int = 7):
     finally:
         db.close()
 
+@app.get("/api/categories")
+def category_stats(days: int = 7):
+    db = SessionLocal()
+    try:
+        since = datetime.utcnow() - timedelta(days=days)
+        rows = (
+            db.query(
+                Expense.category,
+                func.sum(Expense.amount).label("total")
+            )
+            .filter(Expense.created_at >= since)
+            .group_by(Expense.category)
+            .all()
+        )
+        return [{"category": r.category, "total": float(r.total)} for r in rows]
+    finally:
+        db.close()
+
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
